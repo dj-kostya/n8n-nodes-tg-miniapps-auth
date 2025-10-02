@@ -2,8 +2,9 @@
   "git": {
     "commitMessage": "chore: release v${version}",
     "tagName": "v${version}",
-    "requireCleanWorkingDir": true,
-    "requireUpstream": false
+    "requireCleanWorkingDir": false,
+    "requireUpstream": false,
+    "addUntrackedFiles": false
   },
   "github": {
     "release": true,
