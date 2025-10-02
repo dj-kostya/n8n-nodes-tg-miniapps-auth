@@ -3,7 +3,7 @@
     "commitMessage": "chore: release v${version}",
     "tagName": "v${version}",
     "requireCleanWorkingDir": true,
-    "requireUpstream": true
+    "requireUpstream": false
   },
   "github": {
     "release": true,
@@ -16,7 +16,8 @@
   "npm": {
     "publish": true,
     "access": "public",
-    "publishPath": "."
+    "publishPath": ".",
+    "ignoreVersion": false
   },
   "hooks": {
     "before:init": [
