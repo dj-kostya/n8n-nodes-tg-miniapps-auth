@@ -1,6 +1,6 @@
 {
     "name": "n8n-nodes-tg-miniapps-auth",
-    "version": "0.1.0",
+    "version": "0.1.1",
     "description": "n8n node for Telegram Mini Apps authentication and user management",
     "license": "MIT",
     "homepage": "https://github.com/dj-kostya/n8n-nodes-tg-miniapps-auth#readme",
