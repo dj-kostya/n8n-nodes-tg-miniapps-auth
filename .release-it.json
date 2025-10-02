@@ -9,7 +9,6 @@
   "github": {
     "release": true,
     "releaseName": "Release v${version}",
-    "releaseNotes": "See CHANGELOG.md for details.",
     "draft": false,
     "preRelease": false,
     "autoGenerate": true
