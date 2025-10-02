@@ -15,7 +15,8 @@
   },
   "npm": {
     "publish": true,
-    "access": "public"
+    "access": "public",
+    "publishPath": "."
   },
   "hooks": {
     "before:init": [
