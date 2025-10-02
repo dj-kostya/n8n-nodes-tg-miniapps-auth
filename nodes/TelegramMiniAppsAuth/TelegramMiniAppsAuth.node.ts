@@ -1,5 +1,7 @@
 import type {
+	IDataObject,
 	IExecuteFunctions,
+	INode,
 	INodeExecutionData,
 	INodeType,
 	INodeTypeDescription,
@@ -66,7 +68,7 @@ export class TelegramMiniAppsAuth implements INodeType {
 				required: true,
 			},
 			{
-				displayName: 'Max Age (seconds)',
+				displayName: 'Max Age (Seconds)',
 				name: 'maxAge',
 				type: 'number',
 				default: 86400,
@@ -123,15 +125,16 @@ export class TelegramMiniAppsAuth implements INodeType {
 					});
 				}
 
-				// Parse and verify init-data
-				const parsedData = TelegramMiniAppsAuth.parseAndVerifyInitData(
-					initData,
-					credentials.botToken as string,
-					maxAge,
-				);
+			// Parse and verify init-data
+			const parsedData = TelegramMiniAppsAuth.parseAndVerifyInitData(
+				initData,
+				credentials.botToken as string,
+				maxAge,
+				this.getNode(),
+			);
 
-				// Prepare output data
-				const outputData: any = {
+			// Prepare output data
+			const outputData: IDataObject = {
 					verified: true,
 					query_id: parsedData.query_id,
 					user: parsedData.user,
@@ -185,13 +188,14 @@ export class TelegramMiniAppsAuth implements INodeType {
 		initData: string,
 		botToken: string,
 		maxAge: number,
+		node: INode,
 	): ParsedInitData {
 		// Parse URL-encoded init-data
 		const params = new URLSearchParams(initData);
 		const hash = params.get('hash');
 		
 		if (!hash) {
-			throw new Error('Hash is missing from init-data');
+			throw new NodeOperationError(node, 'Hash is missing from init-data');
 		}
 
 		// Remove hash from params for verification
@@ -221,20 +225,20 @@ export class TelegramMiniAppsAuth implements INodeType {
 
 		// Verify hash
 		if (calculatedHash !== hash) {
-			throw new Error('Invalid hash - init-data verification failed');
+			throw new NodeOperationError(node, 'Invalid hash - init-data verification failed');
 		}
 
 		// Parse user data
 		const userParam = params.get('user');
 		if (!userParam) {
-			throw new Error('User data is missing from init-data');
+			throw new NodeOperationError(node, 'User data is missing from init-data');
 		}
 
 		let user: TelegramInitData['user'];
 		try {
 			user = JSON.parse(userParam);
-		} catch (error) {
-			throw new Error('Invalid user data format');
+		} catch {
+			throw new NodeOperationError(node, 'Invalid user data format');
 		}
 
 		// Check auth_date
@@ -242,13 +246,13 @@ export class TelegramMiniAppsAuth implements INodeType {
 		const currentTime = Math.floor(Date.now() / 1000);
 		
 		if (currentTime - authDate > maxAge) {
-			throw new Error(`Init-data is too old (max age: ${maxAge} seconds)`);
+			throw new NodeOperationError(node, `Init-data is too old (max age: ${maxAge} seconds)`);
 		}
 
 		// Get query_id
 		const queryId = params.get('query_id');
 		if (!queryId) {
-			throw new Error('Query ID is missing from init-data');
+			throw new NodeOperationError(node, 'Query ID is missing from init-data');
 		}
 
 		return {

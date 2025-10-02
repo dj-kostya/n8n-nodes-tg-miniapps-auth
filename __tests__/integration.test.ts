@@ -4,8 +4,8 @@ import type { IExecuteFunctions } from 'n8n-workflow';
 
 // Mock n8n-workflow
 jest.mock('n8n-workflow', () => ({
-	NodeOperationError: jest.fn().mockImplementation((node: any, message: string, context?: any) => {
-		const error = new Error(message) as any;
+	NodeOperationError: jest.fn().mockImplementation((node: unknown, message: string, context?: unknown) => {
+		const error = new Error(message) as Error & { context?: unknown };
 		if (context) {
 			error.context = context;
 		}
@@ -26,7 +26,7 @@ describe('Integration Tests', () => {
 			getCredentials: jest.fn(),
 			getNode: jest.fn(),
 			continueOnFail: jest.fn(),
-		} as any;
+		} as unknown as jest.Mocked<IExecuteFunctions>;
 
 		jest.clearAllMocks();
 		
@@ -37,7 +37,8 @@ describe('Integration Tests', () => {
 			botToken: testBotTokens.valid
 		});
 		mockExecuteFunctions.continueOnFail.mockReturnValue(false);
-		mockExecuteFunctions.getNode.mockReturnValue({ name: 'Test Node' } as any);
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
+		mockExecuteFunctions.getNode.mockReturnValue({ name: 'Test Node', id: 'test', type: 'test', typeVersion: 1, position: [0, 0], parameters: {} } as any);
 	});
 
 	describe('Basic integration', () => {

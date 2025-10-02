@@ -10,8 +10,8 @@ import type { IExecuteFunctions } from 'n8n-workflow';
 
 // Mock n8n-workflow
 jest.mock('n8n-workflow', () => ({
-	NodeOperationError: jest.fn().mockImplementation((node: any, message: string, context?: any) => {
-		const error = new Error(message) as any;
+	NodeOperationError: jest.fn().mockImplementation((node: unknown, message: string, context?: unknown) => {
+		const error = new Error(message) as Error & { context?: unknown };
 		if (context) {
 			error.context = context;
 		}
@@ -32,7 +32,7 @@ describe('TelegramMiniAppsAuth Node', () => {
 			getCredentials: jest.fn(),
 			getNode: jest.fn(),
 			continueOnFail: jest.fn(),
-		} as any;
+		} as unknown as jest.Mocked<IExecuteFunctions>;
 
 		jest.clearAllMocks();
 		
@@ -43,7 +43,8 @@ describe('TelegramMiniAppsAuth Node', () => {
 			botToken: testBotTokens.valid
 		});
 		mockExecuteFunctions.continueOnFail.mockReturnValue(false);
-		mockExecuteFunctions.getNode.mockReturnValue({ name: 'Test Node' } as any);
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
+		mockExecuteFunctions.getNode.mockReturnValue({ name: 'Test Node', id: 'test', type: 'test', typeVersion: 1, position: [0, 0], parameters: {} } as any);
 	});
 
 	describe('Node description', () => {
@@ -207,40 +208,48 @@ describe('TelegramMiniAppsAuth Node', () => {
 	describe('parseAndVerifyInitData method', () => {
 		it('should throw error when hash is missing', () => {
 			expect(() => {
-				(TelegramMiniAppsAuth as any).parseAndVerifyInitData(
+				// eslint-disable-next-line @typescript-eslint/no-explicit-any
+				(TelegramMiniAppsAuth as unknown as { parseAndVerifyInitData: (data: string, token: string, maxAge: number, node: any) => any }).parseAndVerifyInitData(
 					'query_id=test&user={"id":123}&auth_date=1234567890',
 					testBotTokens.valid,
-					86400
+					86400,
+					{ name: 'Test Node' }
 				);
 			}).toThrow('Hash is missing from init-data');
 		});
 
 		it('should throw error when user data is missing', () => {
 			expect(() => {
-				(TelegramMiniAppsAuth as any).parseAndVerifyInitData(
+				// eslint-disable-next-line @typescript-eslint/no-explicit-any
+				(TelegramMiniAppsAuth as unknown as { parseAndVerifyInitData: (data: string, token: string, maxAge: number, node: any) => any }).parseAndVerifyInitData(
 					'query_id=test&auth_date=1234567890&hash=test-hash',
 					testBotTokens.valid,
-					86400
+					86400,
+					{ name: 'Test Node' }
 				);
 			}).toThrow('Invalid hash - init-data verification failed');
 		});
 
 		it('should throw error when query_id is missing', () => {
 			expect(() => {
-				(TelegramMiniAppsAuth as any).parseAndVerifyInitData(
+				// eslint-disable-next-line @typescript-eslint/no-explicit-any
+				(TelegramMiniAppsAuth as unknown as { parseAndVerifyInitData: (data: string, token: string, maxAge: number, node: any) => any }).parseAndVerifyInitData(
 					'user={"id":123}&auth_date=1234567890&hash=test-hash',
 					testBotTokens.valid,
-					86400
+					86400,
+					{ name: 'Test Node' }
 				);
 			}).toThrow('Invalid hash - init-data verification failed');
 		});
 
 		it('should throw error when user data is malformed', () => {
 			expect(() => {
-				(TelegramMiniAppsAuth as any).parseAndVerifyInitData(
+				// eslint-disable-next-line @typescript-eslint/no-explicit-any
+				(TelegramMiniAppsAuth as unknown as { parseAndVerifyInitData: (data: string, token: string, maxAge: number, node: any) => any }).parseAndVerifyInitData(
 					'query_id=test&user=invalid-json&auth_date=1234567890&hash=test-hash',
 					testBotTokens.valid,
-					86400
+					86400,
+					{ name: 'Test Node' }
 				);
 			}).toThrow('Invalid hash - init-data verification failed');
 		});
@@ -249,10 +258,12 @@ describe('TelegramMiniAppsAuth Node', () => {
 			const expiredInitData = generateExpiredInitData(testUsers.basic, testBotTokens.valid, 100000);
 			
 			expect(() => {
-				(TelegramMiniAppsAuth as any).parseAndVerifyInitData(
+				// eslint-disable-next-line @typescript-eslint/no-explicit-any
+				(TelegramMiniAppsAuth as unknown as { parseAndVerifyInitData: (data: string, token: string, maxAge: number, node: any) => any }).parseAndVerifyInitData(
 					expiredInitData,
 					testBotTokens.valid,
-					3600 // 1 hour max age
+					3600, // 1 hour max age
+					{ name: 'Test Node' }
 				);
 			}).toThrow('Init-data is too old');
 		});
@@ -261,10 +272,12 @@ describe('TelegramMiniAppsAuth Node', () => {
 			const invalidInitData = generateInvalidInitData('invalid_hash');
 			
 			expect(() => {
-				(TelegramMiniAppsAuth as any).parseAndVerifyInitData(
+				// eslint-disable-next-line @typescript-eslint/no-explicit-any
+				(TelegramMiniAppsAuth as unknown as { parseAndVerifyInitData: (data: string, token: string, maxAge: number, node: any) => any }).parseAndVerifyInitData(
 					invalidInitData,
 					testBotTokens.valid,
-					86400
+					86400,
+					{ name: 'Test Node' }
 				);
 			}).toThrow('Invalid hash - init-data verification failed');
 		});
@@ -272,10 +285,12 @@ describe('TelegramMiniAppsAuth Node', () => {
 		it('should successfully parse and verify valid init data', () => {
 			const validInitData = generateTestInitData(testUsers.basic, 'test-query', testBotTokens.valid);
 			
-			const result = (TelegramMiniAppsAuth as any).parseAndVerifyInitData(
+			// eslint-disable-next-line @typescript-eslint/no-explicit-any
+			const result = (TelegramMiniAppsAuth as unknown as { parseAndVerifyInitData: (data: string, token: string, maxAge: number, node: any) => any }).parseAndVerifyInitData(
 				validInitData,
 				testBotTokens.valid,
-				86400
+				86400,
+				{ name: 'Test Node' }
 			);
 			
 			expect(result.query_id).toBe('test-query');

@@ -14,6 +14,7 @@ global.console = {
 
 // Global test utilities
 declare global {
+	// eslint-disable-next-line @typescript-eslint/no-namespace
 	namespace jest {
 		interface Matchers<R> {
 			toBeValidTelegramUser(): R;
@@ -23,7 +24,7 @@ declare global {
 
 // Custom matcher for Telegram user validation
 expect.extend({
-	toBeValidTelegramUser(received: any) {
+	toBeValidTelegramUser(received: unknown) {
 		const pass = 
 			received &&
 			typeof received === 'object' &&
