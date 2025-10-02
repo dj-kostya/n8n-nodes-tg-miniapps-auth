@@ -2,16 +2,16 @@
 	"node": "n8n-nodes-tg-miniapps-auth",
 	"nodeVersion": "1.0",
 	"codexVersion": "1.0",
-	"categories": ["Development", "Developer Tools"],
+	"categories": ["Development", "Developer Tools", "Communication"],
 	"resources": {
 		"credentialDocumentation": [
 			{
-				"url": "https://github.com/org/repo?tab=readme-ov-file#credentials"
+				"url": "https://core.telegram.org/bots/api"
 			}
 		],
 		"primaryDocumentation": [
 			{
-				"url": "https://github.com/org/repo?tab=readme-ov-file"
+				"url": "https://core.telegram.org/bots/webapps"
 			}
 		]
 	}
