@@ -76,7 +76,7 @@ export class TelegramMiniAppsAuth implements INodeType {
 
 		// Get credentials
 		const credentials = await this.getCredentials('telegramApi');
-		if (!credentials?.botToken) {
+		if (!credentials?.accessToken) {
 			throw new NodeOperationError(this.getNode(), 'Bot token is required');
 		}
 
