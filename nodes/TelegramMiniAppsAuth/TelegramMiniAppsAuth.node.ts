@@ -95,7 +95,7 @@ export class TelegramMiniAppsAuth implements INodeType {
 					});
 				}
 
-				await validate(initData, credentials.botToken as string, {
+				await validate(initData, credentials.accessToken as string, {
 					expiresIn: maxAge,
 				});
 				const parsedData = await parse(initData);
