@@ -1,42 +1,12 @@
 import type {
 	IDataObject,
 	IExecuteFunctions,
-	INode,
 	INodeExecutionData,
 	INodeType,
 	INodeTypeDescription,
 } from 'n8n-workflow';
 import { NodeOperationError } from 'n8n-workflow';
-import * as crypto from 'crypto';
-
-interface TelegramInitData {
-	query_id: string;
-	user: {
-		id: number;
-		first_name: string;
-		last_name?: string;
-		username?: string;
-		language_code?: string;
-		is_premium?: boolean;
-	};
-	auth_date: number;
-	hash: string;
-}
-
-interface ParsedInitData {
-	query_id: string;
-	user: {
-		id: number;
-		first_name: string;
-		last_name?: string;
-		username?: string;
-		language_code?: string;
-		is_premium?: boolean;
-	};
-	auth_date: number;
-	hash: string;
-	raw_data: string;
-}
+import { validate, parse } from '@telegram-apps/init-data-node';
 
 export class TelegramMiniAppsAuth implements INodeType {
 	description: INodeTypeDescription = {
@@ -125,34 +95,27 @@ export class TelegramMiniAppsAuth implements INodeType {
 					});
 				}
 
-			// Parse and verify init-data
-			const parsedData = TelegramMiniAppsAuth.parseAndVerifyInitData(
-				initData,
-				credentials.botToken as string,
-				maxAge,
-				this.getNode(),
-			);
+				await validate(initData, credentials.botToken as string, {
+					expiresIn: maxAge,
+				});
+				const parsedData = await parse(initData);
 
-			// Prepare output data
-			const outputData: IDataObject = {
+				// Prepare output data
+				const outputData: IDataObject = {
 					verified: true,
 					query_id: parsedData.query_id,
 					user: parsedData.user,
 					auth_date: parsedData.auth_date,
 				};
 
-				if (options.includeRawData) {
-					outputData.raw_data = parsedData.raw_data;
-				}
-
 				if (options.includeHash) {
 					outputData.hash = parsedData.hash;
 				}
 
 				// Add additional computed fields
-				outputData.user_id = parsedData.user.id;
-				outputData.user_name = parsedData.user.first_name + 
-					(parsedData.user.last_name ? ` ${parsedData.user.last_name}` : '');
+				outputData.user_id = parsedData.user?.id;
+				outputData.user_name = parsedData.user?.first_name +
+					(parsedData.user?.last_name ? ` ${parsedData.user.last_name}` : '');
 				outputData.is_authenticated = true;
 
 				returnData.push({
@@ -184,83 +147,4 @@ export class TelegramMiniAppsAuth implements INodeType {
 		return [returnData];
 	}
 
-	private static parseAndVerifyInitData(
-		initData: string,
-		botToken: string,
-		maxAge: number,
-		node: INode,
-	): ParsedInitData {
-		// Parse URL-encoded init-data
-		const params = new URLSearchParams(initData);
-		const hash = params.get('hash');
-		
-		if (!hash) {
-			throw new NodeOperationError(node, 'Hash is missing from init-data');
-		}
-
-		// Remove hash from params for verification
-		params.delete('hash');
-		
-		// Sort parameters alphabetically
-		const entries: [string, string][] = [];
-		params.forEach((value, key) => {
-			entries.push([key, value]);
-		});
-		const sortedParams = entries
-			.sort((a, b) => a[0].localeCompare(b[0]))
-			.map(([key, value]) => `${key}=${value}`)
-			.join('\n');
-
-		// Create secret key
-		const secretKey = crypto
-			.createHmac('sha256', 'WebAppData')
-			.update(botToken)
-			.digest();
-
-		// Calculate hash
-		const calculatedHash = crypto
-			.createHmac('sha256', secretKey)
-			.update(sortedParams)
-			.digest('hex');
-
-		// Verify hash
-		if (calculatedHash !== hash) {
-			throw new NodeOperationError(node, 'Invalid hash - init-data verification failed');
-		}
-
-		// Parse user data
-		const userParam = params.get('user');
-		if (!userParam) {
-			throw new NodeOperationError(node, 'User data is missing from init-data');
-		}
-
-		let user: TelegramInitData['user'];
-		try {
-			user = JSON.parse(userParam);
-		} catch {
-			throw new NodeOperationError(node, 'Invalid user data format');
-		}
-
-		// Check auth_date
-		const authDate = parseInt(params.get('auth_date') || '0', 10);
-		const currentTime = Math.floor(Date.now() / 1000);
-		
-		if (currentTime - authDate > maxAge) {
-			throw new NodeOperationError(node, `Init-data is too old (max age: ${maxAge} seconds)`);
-		}
-
-		// Get query_id
-		const queryId = params.get('query_id');
-		if (!queryId) {
-			throw new NodeOperationError(node, 'Query ID is missing from init-data');
-		}
-
-		return {
-			query_id: queryId,
-			user,
-			auth_date: authDate,
-			hash,
-			raw_data: initData,
-		};
-	}
 }

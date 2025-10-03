@@ -34,10 +34,6 @@
         "lint:fix": "n8n-node lint --fix",
         "release": "n8n-node release",
         "prepublishOnly": "n8n-node prerelease",
-        "test": "jest",
-        "test:watch": "jest --watch",
-        "test:coverage": "jest --coverage",
-        "test:ci": "jest --ci --coverage --watchAll=false",
         "audit": "npm audit",
         "audit:fix": "npm audit fix",
         "outdated": "npm outdated",
@@ -48,9 +44,7 @@
     ],
     "n8n": {
         "n8nNodesApiVersion": 1,
-        "credentials": [
-            "dist/credentials/TelegramApi.credentials.js"
-        ],
+        "credentials": [],
         "nodes": [
             "dist/nodes/TelegramMiniAppsAuth/TelegramMiniAppsAuth.node.js"
         ]
@@ -73,5 +67,8 @@
     },
     "overrides": {
         "form-data": "^4.0.4"
+    },
+    "dependencies": {
+        "@telegram-apps/init-data-node": "^2.0.10"
     }
 }
